@@ -3,15 +3,8 @@
 ## Project Description ##
 Implementing a cascade controller for quadrotors in C++ to control body rate/pitch/yaw, altitude, and lateral position.
 
-## Scenario 1: Intro ##
-
-tune the `Mass` parameter in `QuadControlParams.txt` to make the vehicle more or less stay in the same spot.
-Mass is set to 
-
-[GIF]
 
 ## Scenario 2: Body rate and roll/pitch control ##
- In this scenario, you will see a quad above the origin. It is created with a small initial rotation speed about its roll axis. Your controller will need to stabilize the rotational motion and bring the vehicle back to level attitude.
 
 `[RUBRIC]`  The controller should be a proportional controller on body rates to commanded moments. The controller should take into account the moments of inertia of the drone when calculating the commanded moments.
 
@@ -23,10 +16,13 @@ Body Rate Controller is a P Controller.The commanded roll, pitch, and yaw are co
 
 The total thrust and the moments created by the propellers;
 
-  $F_{total}$ = $F_1$ + $F_{2}$ + $F_3$ + $F_4$
+  <!-- $F_{total}$ = $F_1$ + $F_{2}$ + $F_3$ + $F_4$
   $\tau_x$ = ($F_1$ - $F_2$ + $F_3$ - $F_4$) * $l$
   $\tau_y$ = ($F_1$ + $F_2$ - $F_3$ - $F_4$) * $l$
-  $\tau_z$ = - ( $F_1$ - $F_2$ - $F_3$ + $F_4$ ) * $\kappa$ 
+  $\tau_z$ = - ( $F_1$ - $F_2$ - $F_3$ + $F_4$ ) * $\kappa$  -->
+
+ ![](images/forces.png)
+
 
   Where $F_1$ to $F_4$ represents the target thrust of each motor, $\tau$ (x, y, z) are the moments in each direction, $F_{total}$ is the total thrust, $\kappa$ is the drag/thrust ratio, and $l$ is the drone arm length over the square root of two.
 
@@ -54,9 +50,7 @@ The total thrust and the moments created by the propellers;
     V3F ubar = err * kpPQR;
     momentCmd = ubar * V3F(Ixx,Iyy, Izz);
 ```
-  - Tune `kpPQR` in `QuadControlParams.txt` to get the vehicle to stop spinning quickly but not overshoot
 
-[GIF]
 All Done!
 
   ---
@@ -103,7 +97,7 @@ The following equation was also applied to allow the output to be in terms of ro
 
  - Tune `kpBank` in `QuadControlParams.txt` to minimize settling time but avoid too much overshoot
 
-[GIF]
+  ![](images/2.gif)
 
 All Done!
 
@@ -150,7 +144,7 @@ Lateral Controller is a PD controller to control acceleration on x and y.
  Altitude Controller is a PD controller to control the acceleration, or thrust, needed to adjust the quad's altitude
 
 The following equations were used to implement:
-$$
+<!-- $$
 \begin{pmatrix} \ddot{x} \\ \ddot{y} \\ \ddot{z}\end{pmatrix}  = \begin{pmatrix} 0 \\ 0 \\ g\end{pmatrix} + R \begin{pmatrix} 0 \\ 0 \\ c \end{pmatrix} 
 $$ where $R = R(\psi) \times R(\theta) \times R(\phi)$. 
 $$
@@ -163,8 +157,9 @@ $$\bar{u}_1 = \ddot{z} = c b^z +g$$
 
 $$c = (\bar{u}_1-g)/b^z$$  
 
-$$\bar{u}_1 = k_{p-z}(z_{t} - z_{a}) + k_{d-z}(\dot{z}_{t} - \dot{z}_{a}) + \ddot{z}_t$$
- 
+$$\bar{u}_1 = k_{p-z}(z_{t} - z_{a}) + k_{d-z}(\dot{z}_{t} - \dot{z}_{a}) + \ddot{z}_t$$ -->
+  ![](images/altitude_controller.png)
+
 ```cpp
     float posZ_error = posZCmd - posZ;
     float proportional = kpPosZ * posZ_error;
@@ -181,21 +176,15 @@ $$\bar{u}_1 = k_{p-z}(z_{t} - z_{a}) + k_{d-z}(\dot{z}_{t} - \dot{z}_{a}) + \ddo
 
   ```
 
-
-* tune parameters `kpPosZ` and `kpPosZ`
-Done...
-* tune parameters `kpVelXY` and `kpVelZ`
-Done...
-
-[GIF]
-
 [RUBRIC] The controller can be a linear/proportional heading controller to yaw rate commands (non-linear transformation not required).
 Implement calculating the motor commands given commanded thrust and moments in C++.
+
 * `YawControl()`
 It is a P controller. It is better to optimize the yaw to be between [-pi, pi]. Formula required:
 
-  $r_c = k_p (\psi_t - \psi_a)$
+  <!-- $r_c = k_p (\psi_t - \psi_a)$ -->
 
+  ![](images/yaw_controller.png)
 
 ```cpp
 
@@ -213,7 +202,7 @@ It is a P controller. It is better to optimize the yaw to be between [-pi, pi]. 
     }
     yawRateCmd = kpYaw * yaw_err;
 ```
-
+  ![](images/3.gif)
 
 
 
@@ -230,11 +219,11 @@ Integral component added with 3 lines,
 ```
 
 
-<img src="animations/scenario4.gif" width="500"/>
-
+  ![](images/4.gif)
 
 ### Tracking trajectories ###
 My original QuadParams did not make the drone fly succesfuly. Therefore, I've updatedd some of them then check for other scenerios are ok.
 
-[GIF]
+[GIF5]
+  ![](images/5.gif)
 
