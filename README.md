@@ -24,7 +24,7 @@ The total thrust and the moments created by the propellers;
  ![](images/forces.png)
 
 
-  Where $F_1$ to $F_4$ represents the target thrust of each motor, $\tau$ (x, y, z) are the moments in each direction, $F_{total}$ is the total thrust, $\kappa$ is the drag/thrust ratio, and $l$ is the drone arm length over the square root of two.
+  Where F_1 to F_4 represents the target thrust of each motor, tau(x, y, z) are the moments in each direction, F_total is the total thrust, kappa is the drag/thrust ratio, and l is the drone arm length over the square root of two.
 
 ```cpp
     float l = L / sqrtf(2.f);
@@ -60,7 +60,7 @@ All Done!
 
 2. Implement roll / pitch control
 
-The roll-pitch controller is a P controller responsible for commanding the roll and pitch rates ( $p_c$ and  $q_c$ ) in the body frame. First, it sets the desired rate of change of the given matrix elements using a P controller.
+The roll-pitch controller is a P controller responsible for commanding the roll and pitch rates ( p_c and  q_c ) in the body frame. First, it sets the desired rate of change of the given matrix elements using a P controller.
 
  - `RollPitchControl()`
 
@@ -224,6 +224,5 @@ Integral component added with 3 lines,
 ### Tracking trajectories ###
 My original QuadParams did not make the drone fly succesfuly. Therefore, I've updatedd some of them then check for other scenerios are ok.
 
-[GIF5]
   ![](images/5.gif)
 
