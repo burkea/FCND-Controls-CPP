@@ -226,3 +226,6 @@ My original QuadParams did not make the drone fly succesfuly. Therefore, I've up
 
   ![](images/5.gif)
 
+References:
+* Udacity Flying Car Nanodegree Program.
+[//]: # (Bürke Atilla // June 2019 )
