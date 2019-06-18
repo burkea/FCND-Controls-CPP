@@ -165,17 +165,16 @@ V3F QuadControl::RollPitchControl(V3F accelCmd, Quaternion<float> attitude, floa
         float b_y_err = b_y_c_target - R(1,2);
         float b_dot_y_c_target = kpBank * b_y_err;
 //
-        pqrCmd.x = (R(1,0) * b_dot_x_c_target - R(0,0) * b_dot_y_c_target / R(2,2));
-        pqrCmd.y = (R(1,1) * b_dot_x_c_target - R(0,1) * b_dot_y_c_target / R(2,2));
-        pqrCmd.z = 0.0;
+        pqrCmd.x = (R(1,0) * b_dot_x_c_target - R(0,0) * b_dot_y_c_target) / R(2,2);
+        pqrCmd.y = (R(1,1) * b_dot_x_c_target - R(0,1) * b_dot_y_c_target) / R(2,2);
     }
     else
     {
         pqrCmd.x = 0.0;
         pqrCmd.y = 0.0;
-        pqrCmd.z = 0.0;
+//
     }
-    
+    pqrCmd.z = 0.0;
     
     /////////////////////////////// END STUDENT CODE ////////////////////////////
     
@@ -206,7 +205,25 @@ float QuadControl::AltitudeControl(float posZCmd, float velZCmd, float posZ, flo
     float thrust = 0;
     
     ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+    //    u1_bar = self.z_k_p * (z_target - z_actual) + self.z_k_d * (z_dot_target - z_dot_actual) + z_dot_dot_target
+    //    b_z = rot_mat[2,2]
+    //    c = (u1_bar - self.g) / b_z
+    //    return c
+    float posZ_error = posZCmd - posZ;
+    float proportional = kpPosZ * posZ_error;
 
+    float derivative = kpVelZ * (velZCmd - velZ)  ;
+
+    integratedAltitudeError += posZ_error * dt;
+    float integrated = KiPosZ * integratedAltitudeError;
+
+    float b_z = R(2,2);
+
+    float u_1_bar = proportional + derivative  + accelZCmd + integrated;
+
+    float acc = ( u_1_bar - CONST_GRAVITY ) / b_z;
+
+    thrust = - mass * CONSTRAIN(acc, - maxAscentRate / dt, maxAscentRate / dt);
 
     /////////////////////////////// END STUDENT CODE ////////////////////////////
     
@@ -243,6 +260,26 @@ V3F QuadControl::LateralPositionControl(V3F posCmd, V3F velCmd, V3F pos, V3F vel
     V3F accelCmd = accelCmdFF;
     
     ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+//    x_dot_dot_command = self.x_k_p * (x_target - x_actual) + self.x_k_d * (x_dot_target - x_dot_actual) + x_dot_dot_target
+//    y_dot_dot_command = self.y_k_p * (y_target - y_actual) + self.y_k_d * (y_dot_target - y_dot_actual) + y_dot_dot_target
+//    b_x_c = x_dot_dot_command/c
+//    b_y_c = y_dot_dot_command/c
+    
+    
+    
+    V3F capVelCmd;
+    if ( velCmd.mag() > maxSpeedXY ) {
+        capVelCmd = velCmd.norm() * maxSpeedXY;
+    } else {
+        capVelCmd = velCmd;
+    }
+    
+    accelCmd = kpPosXY * ( posCmd - pos ) + kpVelXY * ( capVelCmd - vel ) + accelCmd;
+    
+    if ( accelCmd.mag() > maxAccelXY ) {
+        accelCmd = accelCmd.norm() * maxAccelXY;
+    }
+    
     
     
     
@@ -266,7 +303,34 @@ float QuadControl::YawControl(float yawCmd, float yaw)
     
     float yawRateCmd=0;
     ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+    //    r_c = self.k_p_yaw * (psi_target - psi_actual)
+
+    //# Ensure the target is within range of 0 to 2*pi
+    //    yaw_cmd = np.mod(yaw_cmd, 2.0*np.pi)
+    //
+    //    yaw_error = yaw_cmd - yaw
+    //    if yaw_error > np.pi:
+    //        yaw_error = yaw_error - 2.0*np.pi
+    //        elif yaw_error < -np.pi:
+    //        yaw_error = yaw_error + 2.0*np.pi
+    //
+    //        yawrate_cmd = self.Kp_yaw*yaw_error
+    //
     
+    float yawCmd_modded = fmodf(yawCmd, 2 * F_PI);
+    if ( yawCmd > 0 ) {
+        yawCmd_modded = fmodf(yawCmd, 2 * F_PI);
+    } else {
+        yawCmd_modded = -fmodf(-yawCmd, 2 * F_PI);
+    }
+    float yaw_err = yawCmd_modded - yaw;
+    if ( yaw_err > F_PI ) {
+        yaw_err -= 2 * F_PI;
+    } if ( yaw_err < -F_PI ) {
+        yaw_err += 2 * F_PI;
+    }
+    yawRateCmd = kpYaw * yaw_err;
+
     
     /////////////////////////////// END STUDENT CODE ////////////////////////////
     
