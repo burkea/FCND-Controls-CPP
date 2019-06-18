@@ -215,15 +215,12 @@ It is a P controller. It is better to optimize the yaw to be between [-pi, pi]. 
 ```
 
 
-* tune parameters `kpYaw` and the 3rd (z) component of `kpPQR`
-Done....
-
-
 
 
 ### Non-idealities and robustness (scenario 4) ###
 
-Integral component added,
+Integral component added with 3 lines,
+
 ```cpp
     integratedAltitudeError += posZ_error * dt;
     float integrated = KiPosZ * integratedAltitudeError;
@@ -232,72 +229,12 @@ Integral component added,
     float u_1_bar = proportional + derivative  + accelZCmd + integrated;
 ```
 
-<p align="center">
+
 <img src="animations/scenario4.gif" width="500"/>
-</p>
 
 
 ### Tracking trajectories ###
+My original QuadParams did not make the drone fly succesfuly. Therefore, I've updatedd some of them then check for other scenerios are ok.
 
-Now that we have all the working parts of a controller, you will put it all together and test it's performance once again on a trajectory.  For this simulation, you will use `Scenario 5`.  This scenario has two quadcopters:
- - the orange one is following `traj/FigureEight.txt`
- - the other one is following `traj/FigureEightFF.txt` - for now this is the same trajectory.  For those interested in seeing how you might be able to improve the performance of your drone by adjusting how the trajectory is defined, check out **Extra Challenge 1** below!
-
-How well is your drone able to follow the trajectory?  It is able to hold to the path fairly well?
-
-
-### Extra Challenge 1 (Optional) ###
-
-You will notice that initially these two trajectories are the same. Let's work on improving some performance of the trajectory itself.
-
-1. Inspect the python script `traj/MakePeriodicTrajectory.py`.  Can you figure out a way to generate a trajectory that has velocity (not just position) information?
-
-2. Generate a new `FigureEightFF.txt` that has velocity terms
-Did the velocity-specified trajectory make a difference? Why?
-
-With the two different trajectories, your drones' motions should look like this:
-
-<p align="center">
-<img src="animations/scenario5.gif" width="500"/>
-</p>
-
-
-### Extra Challenge 2 (Optional) ###
-
-For flying a trajectory, is there a way to provide even more information for even better tracking?
-
-How about trying to fly this trajectory as quickly as possible (but within following threshold)!
-
-
-## Evaluation ##
-
-To assist with tuning of your controller, the simulator contains real time performance evaluation.  We have defined a set of performance metrics for each of the scenarios that your controllers must meet for a successful submission.
-
-There are two ways to view the output of the evaluation:
-
- - in the command line, at the end of each simulation loop, a **PASS** or a **FAIL** for each metric being evaluated in that simulation
- - on the plots, once your quad meets the metrics, you will see a green box appear on the plot notifying you of a **PASS**
-
-
-### Performance Metrics ###
-
-The specific performance metrics are as follows:
-
- - scenario 2
-   - roll should less than 0.025 radian of nominal for 0.75 seconds (3/4 of the duration of the loop)
-   - roll rate should less than 2.5 radian/sec for 0.75 seconds
-
- - scenario 3
-   - X position of both drones should be within 0.1 meters of the target for at least 1.25 seconds
-   - Quad2 yaw should be within 0.1 of the target for at least 1 second
-
-
- - scenario 4
-   - position error for all 3 quads should be less than 0.1 meters for at least 1.5 seconds
-
- - scenario 5
-   - position error of the quad should be less than 0.25 meters for at least 3 seconds
-
-
-[RUBRIC] Implement calculating the motor commands given commanded thrust and moments in C++. --- > The thrust and moments should be converted to the appropriate 4 different desired thrust forces for the moments. Ensure that the dimensions of the drone are properly accounted for when calculating thrust from moments.
+[GIF]
 
