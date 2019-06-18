@@ -60,7 +60,7 @@ All Done!
 
 2. Implement roll / pitch control
 
-The roll-pitch controller is a P controller responsible for commanding the roll and pitch rates ( p_c and  q_c ) in the body frame. First, it sets the desired rate of change of the given matrix elements using a P controller.
+The roll-pitch controller is a P controller. Responsible for commanding the roll and pitch rates ( p_c and  q_c ) in the body frame.
 
  - `RollPitchControl()`
 
@@ -95,8 +95,6 @@ The following equation was also applied to allow the output to be in terms of ro
         pqrCmd.y = 0.0;
 ```
 
- - Tune `kpBank` in `QuadControlParams.txt` to minimize settling time but avoid too much overshoot
-
   ![](images/2.gif)
 
 All Done!
@@ -104,8 +102,6 @@ All Done!
 ----
 
 ### Position/velocity and yaw angle control (scenario 3) ###
-
-Next, you will implement the position, altitude and yaw control for your quad. For the simulation, you will use Scenario 3. This will create 2 identical quads, one offset from its target point (but initialized with yaw = 0) and second offset from target point but yaw = 45 degrees
 
 **`[RUBRIC]`** The controller should use both the down position and the down velocity to command thrust. Ensure that the output value is indeed thrust (the drone's mass needs to be accounted for) and that the thrust includes the non-linear effects from non-zero roll/pitch angles.
 * `LateralPositionControl()`
@@ -222,7 +218,7 @@ Integral component added with 3 lines,
   ![](images/4.gif)
 
 ### Tracking trajectories ###
-My original QuadParams did not make the drone fly succesfuly. Therefore, I've updatedd some of them then check for other scenerios are ok.
+My original QuadParams did not make the drone fly succesfuly. Therefore, I've updated some of them then check for other scenerios are ok.
 
   ![](images/5.gif)
 
