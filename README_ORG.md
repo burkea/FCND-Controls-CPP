@@ -1,142 +1,3 @@
-# Project: Quadrotor 3D Controller #
-
-## Project Description ##
-Implementing a cascade controller for quadrotors in C++ to control body rate/pitch/yaw, altitude, and lateral position.
-
-## Scenario 1: Intro ##
-
-tune the `Mass` parameter in `QuadControlParams.txt` to make the vehicle more or less stay in the same spot.
-Mass is set to 
-
-[GIF]
-
-## Scenario 2: Body rate and roll/pitch control ##
- In this scenario, you will see a quad above the origin. It is created with a small initial rotation speed about its roll axis. Your controller will need to stabilize the rotational motion and bring the vehicle back to level attitude.
-
-
-* [RUBRIC] The controller should be a proportional controller on body rates to commanded moments. The controller should take into account the moments of inertia of the drone when calculating the commanded moments.
-
-1. Implement body rate control 
-
-Body Rate Controller is a P Controller.The commanded roll, pitch, and yaw are collected by the body rate controller, and they are translated into the desired moment along the axis in the body frame. 
-
-  * `GenerateMotorCommands()` 
-
-The total thrust and the moments created by the propellers;
-
-  $F_{total}$ = $F_1$ + $F_{2}$ + $F_3$ + $F_4$
-  $\tau_x$ = ($F_1$ - $F_2$ + $F_3$ - $F_4$) * $l$
-  $\tau_y$ = ($F_1$ + $F_2$ - $F_3$ - $F_4$) * $l$
-  $\tau_z$ = - ( $F_1$ - $F_2$ - $F_3$ + $F_4$ ) * $\kappa$ 
-
-  Where $F_1$ to $F_4$ represents the target thrust of each motor, $\tau$ (x, y, z) are the moments in each direction, $F_{total}$ is the total thrust, $\kappa$ is the drag/thrust ratio, and $l$ is the drone arm length over the square root of two.
-
-```cpp
-    float l = L / sqrtf(2.f);
-    float uBar = collThrustCmd; // F1 + F2 + F3 + F4
-    float pBar = momentCmd.x / l; // F1 + F3 - F2 - F4
-    float qBar = momentCmd.y / l; // F1 + F2 - F3 - F4
-    float rBar = -momentCmd.z / kappa; // F1 - F2 + F4 - F3
-    
-    float f1 = (uBar + pBar + qBar + rBar) / 4.f; // front left
-    float f2 = (uBar - pBar + qBar - rBar) / 4.f; // front right
-    float f3 = (uBar + pBar - qBar - rBar) / 4.f; // rear left
-    float f4 = (uBar - pBar - qBar + rBar) / 4.f; // rear right
-    
-    cmd.desiredThrustsN[0] = f1; // front left
-    cmd.desiredThrustsN[1] = f2; // front right
-    cmd.desiredThrustsN[2] = f3; // rear left
-    cmd.desiredThrustsN[3] = f4; // rear right
-```
- - `BodyRateControl()`
-
-```cpp
-    V3F err = pqrCmd - pqr;
-    V3F ubar = err * kpPQR;
-    momentCmd = ubar * V3F(Ixx,Iyy, Izz);
-```
-  - Tune `kpPQR` in `QuadControlParams.txt` to get the vehicle to stop spinning quickly but not overshoot
-
-[GIF]
-All Done!
-
-  ---
-
-2. Implement roll / pitch control
-* [RUBRIC] The controller should use the acceleration and thrust commands, in addition to the vehicle attitude to output a body rate command. The controller should account for the non-linear transformation from local accelerations to body rates. Note that the drone's mass should be accounted for when calculating the target angles.
-
-We won't be worrying about yaw just yet.
-
-
-The roll-pitch controller is a P controller responsible for commanding the roll and pitch rates ( $p_c$ and  $q_c$ ) in the body frame. First, it sets the desired rate of change of the given matrix elements using a P controller.
-
- - `RollPitchControl()`
-
- The following equations were used to implement to roll-pitch controller:
- 
- ![](images/roll-Pitch_controller.png)
-
-
-Elementes R13 and R23 of the rotation matrix from body-frame accelerations and world frame accelerations are implemented as a P controller.
-
-The following equation was also applied to allow the output to be in terms of roll and pitch rates:
-
- ![](images/convert_angular_velocities.png)
-
-
- - Tune `kpBank` in `QuadControlParams.txt` to minimize settling time but avoid too much overshoot
-
-[GIF]
-
-All Done!
-----
-
-### Position/velocity and yaw angle control (scenario 3) ###
-
-Implement altitude controller in C++.
-* [RUBRIC] The controller should use both the down position and the down velocity to command thrust. Ensure that the output value is indeed thrust (the drone's mass needs to be accounted for) and that the thrust includes the non-linear effects from non-zero roll/pitch angles.
-
-Additionally, the C++ altitude controller should contain an integrator to handle the weight non-idealities presented in scenario 4.
-
-Implement yaw control in C++.
-[RUBRIC] The controller can be a linear/proportional heading controller to yaw rate commands (non-linear transformation not required).
-
-Implement calculating the motor commands given commanded thrust and moments in C++.
-
-[RUBRIC] The thrust and moments should be converted to the appropriate 4 different desired thrust forces for the moments. Ensure that the dimensions of the drone are properly accounted for when calculating thrust from moments.
-
------
-
-First, you will implement the body rate and roll / pitch control.  For the simulation, you will use `Scenario 2`.  In this scenario, you will see a quad above the origin.  It is created with a small initial rotation speed about its roll axis.  Your controller will need to stabilize the rotational motion and bring the vehicle back to level attitude.
-
-To accomplish this, you will:
-
-1. Implement body rate control
-
- - implement the code in the function `GenerateMotorCommands()`
- - implement the code in the function `BodyRateControl()`
- - Tune `kpPQR` in `QuadControlParams.txt` to get the vehicle to stop spinning quickly but not overshoot
-
-If successful, you should see the rotation of the vehicle about roll (omega.x) get controlled to 0 while other rates remain zero.  Note that the vehicle will keep flying off quite quickly, since the angle is not yet being controlled back to 0.  Also note that some overshoot will happen due to motor dynamics!.
-
-If you come back to this step after the next step, you can try tuning just the body rate omega (without the outside angle controller) by setting `QuadControlParams.kpBank = 0`.
-
-2. Implement roll / pitch control
-We won't be worrying about yaw just yet.
-
- - implement the code in the function `RollPitchControl()`
- - Tune `kpBank` in `QuadControlParams.txt` to minimize settling time but avoid too much overshoot
-
-If successful you should now see the quad level itself (as shown below), though it’ll still be flying away slowly since we’re not controlling velocity/position!  You should also see the vehicle angle (Roll) get controlled to 0.
-
-<p align="center">
-<img src="animations/scenario2.gif" width="500"/>
-</p>
-
-
-
-
-
 # The C++ Project Readme #
 
 This is the readme for the C++ project.
@@ -171,6 +32,59 @@ For Windows, the recommended IDE is Visual Studio.  Here are the steps required 
 5. To compile and run the project / simulator, simply click on the green play button at the top of the screen.  When you run the simulator, you should see a single quadcopter, falling down.
 
 
+### OS X ###
+
+For Mac OS X, the recommended IDE is XCode, which you can get via the App Store.
+
+1. Download and install XCode from the App Store if you don't already have it installed.
+2. Open the project from the `<simulator>/project` directory.
+3. After opening project, you need to set the working directory:
+  1. Go to *(Project Name)* | *Edit Scheme*
+  2. In new window, under *Run/Debug* on left side, under the *Options* tab, set Working Directory to `$PROJECT_DIR` and check ‘use custom working directory’.
+  3. Compile and run the project. You should see a single quadcopter, falling down.
+
+
+### Linux ###
+
+For Linux, the recommended IDE is QtCreator.
+
+1. Download and install QtCreator.
+2. Open the `.pro` file from the `<simulator>/project` directory.
+3. Compile and run the project (using the tab `Build` select the `qmake` option.  You should see a single quadcopter, falling down.
+
+**NOTE:** You may need to install the GLUT libs using `sudo apt-get install freeglut3-dev`
+
+
+### Advanced Versions ###
+
+These are some more advanced setup instructions for those of you who prefer to use a different IDE or build the code manually.  Note that these instructions do assume a certain level of familiarity with the approach and are not as detailed as the instructions above.
+
+#### CLion IDE ####
+
+For those of you who are using the CLion IDE for developement on your platform, we have included the necessary `CMakeLists.txt` file needed to build the simulation.
+
+#### CMake on Linux ####
+
+For those of you interested in doing manual builds using `cmake`, we have provided a `CMakeLists.txt` file with the necessary configuration.
+
+**NOTE: This has only been tested on Ubuntu 16.04, however, these instructions should work for most linux versions.  Also note that these instructions assume knowledge of `cmake` and the required `cmake` dependencies are installed.**
+
+1. Create a new directory for the build files:
+
+```sh
+cd FCND-Controls-CPP
+mkdir build
+```
+
+2. Navigate to the build directory and run `cmake` and then compile and build the code:
+
+```sh
+cd build
+cmake ..
+make
+```
+
+3. You should now be able to run the simulator with `./CPPSim` and you should see a single quadcopter, falling down.
 
 ## Simulator Walkthrough ##
 
